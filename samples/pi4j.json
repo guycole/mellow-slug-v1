@@ -1,0 +1,18 @@
+{
+  "assigned": "hyena-uat-v2",
+  "crateName": "wombat04",
+  "geoLoc": {
+    "siteName": "vallejo01",
+    "altitude": 0,
+    "latitude": 38.108,
+    "longitude": -122.268
+  },
+  "hostName": "pi4j",
+  "receiver": {
+    "id": 5,
+    "task": "hyena-uat-v2",
+    "type": "rtl-sdr-v3",
+    "antenna": "multicoupler"
+  },
+  "type": "rpi4"
+}
