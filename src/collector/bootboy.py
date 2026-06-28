@@ -75,7 +75,7 @@ class BootBoy:
         import subprocess
 
         crontab_entry = (
-            "* * * * * $HOME/github/mellow-slug/bin/collector.sh > /dev/null 2>&1"
+            "*/10 * * * * $HOME/github/mellow-slug-v1/bin/collector.sh > /dev/null 2>&1"
         )
 
         # Always overwrite — collector is dedicated to this workload and must have
