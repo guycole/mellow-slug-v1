@@ -49,12 +49,12 @@ class BootBoy:
             },
             "receiver": {
                 "antenna": receiver.get("antenna", "xxx"),
-                "mode": receiver.get("mode", "xxx"),
+                "mode": "default",
                 "receiver_id": receiver.get("id", "xxx"),
                 "task": receiver.get("task", "xxx"),
                 "type": receiver.get("type", "xxx"),
             },
-            "freshDir": "/var/wombat/fresh/slug",
+            "freshDir": "/var/wombat/fresh/slu",
             "geoLoc": geo_loc,
         }
 
