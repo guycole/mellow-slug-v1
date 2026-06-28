@@ -54,7 +54,7 @@ class BootBoy:
                 "task": receiver.get("task", "xxx"),
                 "type": receiver.get("type", "xxx"),
             },
-            "freshDir": "/var/wombat/fresh",
+            "freshDir": "/var/wombat/fresh/slug",
             "geoLoc": geo_loc,
         }
 

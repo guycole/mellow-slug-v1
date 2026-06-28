@@ -1,5 +1,6 @@
+# Linux hosts only — must be built on a Linux host where the wombat user exists.
 #
-# docker build -t slug:latest .
+# docker build --build-arg WOMBAT_UID=$(id -u wombat) --build-arg WOMBAT_GID=$(id -g wombat) -t slug:latest .
 # docker run -v /var/wombat:/mnt/wombat --name slug slug:latest
 # docker run -e stuntbox=validate -v /var/wombat:/mnt/wombat --name slug slug:latest
 # docker run -e stuntbox=score -e limit=5 --name slug slug:latest
