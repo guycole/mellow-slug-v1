@@ -69,7 +69,7 @@ class Validator:
                     "load_time": datetime.datetime.now(),
                     "obs_quantity": len(self.raw_buffer["observations"]),
                     "platform": self.raw_buffer["equipment"]["platform"],
-                    "site": self.raw_buffer["preamble"]["geoLoc"]["siteName"],
+                    "site": self.raw_buffer["geoLoc"]["siteName"],
                 }
 
                 self.postgres.load_log_insert(load_log)
