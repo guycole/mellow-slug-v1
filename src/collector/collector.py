@@ -65,10 +65,10 @@ class Collector:
         results = {
             "equipment": {
                 "antenna": self.antenna,
-                "receiver_id": self.receiver_id,
-                "receiver_type": self.receiver_type,
-                "platform": self.host_type,
+                "receiverId": self.receiver_id,
+                "receiverType": self.receiver_type,
                 "hostName": self.host_name,
+                "hostType": self.host_type,
             },
             "geoLoc": {
                 "altitude": self.altitude,
