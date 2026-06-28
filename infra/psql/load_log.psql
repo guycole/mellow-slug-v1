@@ -6,9 +6,9 @@
 -- file_name within fresh_dir
 -- file_time is from timeStamp.iso8601
 -- file_type is from project i.e. slug_v1
+-- host_name is from equipment.hostName
 -- load_time is when file was processed
 -- obs_quantity is population of observations in file
--- platform is from equipment.platform
 -- site is from preamble geoLoc.siteName
 --
 create table slug_load_log (
@@ -17,9 +17,9 @@ create table slug_load_log (
   file_name     varchar(48)  unique not null,
   file_time     timestamp    not null,
   file_type     varchar(48)  not null,
+  host_name     varchar(16)  not null,
   load_time     timestamp    not null default CURRENT_TIMESTAMP,
-  obs_quantity  smallint     not null,
-  platform      varchar(16)  not null
+  obs_quantity  smallint     not null
 );
 
 grant select, insert, update, delete on slug_load_log to slug_client;
