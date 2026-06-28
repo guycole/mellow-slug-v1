@@ -66,9 +66,9 @@ class Validator:
                     "file_name": test_file_name,
                     "file_time": self.raw_buffer["timeStamp"]["iso8601"],
                     "file_type": self.raw_buffer["project"],
+                    "host_name": self.raw_buffer["equipment"]["hostName"],
                     "load_time": datetime.datetime.now(),
                     "obs_quantity": len(self.raw_buffer["observations"]),
-                    "platform": self.raw_buffer["equipment"]["platform"],
                     "site": self.raw_buffer["geoLoc"]["siteName"],
                 }
 
