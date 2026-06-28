@@ -4,24 +4,16 @@
 # Development Environment: Ubuntu 22.04.5 LTS/python 3.10.12
 # Author: G.S. Cole (guycole at gmail dot com)
 #
-# import datetime
 import json
-import os
-import platform
 import socket
 import sys
-
-# import time
-# import uuid
-# import zoneinfo
 
 import yaml
 from yaml.loader import SafeLoader
 
-
 class BootBoy:
 
-    def configuration(self, target: str) -> dict[str, str]:
+    def configuration(self, target: str) -> dict[str, any]:
         print(f"BootBoy: configuring {target}")
 
         # Build the path to the admin JSON file
@@ -45,12 +37,12 @@ class BootBoy:
             "crateName": crate_name,
             "equipment": {
                 "hostName": host_name,
-                "type": host_type,
+                "hostType": host_type,
             },
             "receiver": {
                 "antenna": receiver.get("antenna", "xxx"),
                 "mode": "default",
-                "receiver_id": receiver.get("id", "xxx"),
+                "receiverId": receiver.get("id", "xxx"),
                 "task": receiver.get("task", "xxx"),
                 "type": receiver.get("type", "xxx"),
             },

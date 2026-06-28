@@ -27,7 +27,7 @@ class Collector:
         self.fresh_dir = args["freshDir"]
 
         self.host_name = args["equipment"]["hostName"]
-        self.host_type = args["equipment"]["type"]
+        self.host_type = args["equipment"]["hostType"]
 
         self.altitude = args["geoLoc"]["altitude"]
         self.latitude = args["geoLoc"]["latitude"]
@@ -35,7 +35,7 @@ class Collector:
         self.site_name = args["geoLoc"]["siteName"]
 
         self.antenna = args["receiver"]["antenna"]
-        self.receiver_id = args["receiver"]["receiver_id"]
+        self.receiver_id = args["receiver"]["receiverId"]
         self.receiver_mode = args["receiver"]["mode"]
         self.receiver_task = args["receiver"]["task"]
         self.receiver_type = args["receiver"]["type"]
@@ -65,10 +65,10 @@ class Collector:
         results = {
             "equipment": {
                 "antenna": self.antenna,
-                "receiver_id": self.receiver_id,
-                "receiver_type": self.receiver_type,
-                "platform": self.host_type,
+                "receiverId": self.receiver_id,
+                "receiverType": self.receiver_type,
                 "hostName": self.host_name,
+                "hostType": self.host_type,
             },
             "geoLoc": {
                 "altitude": self.altitude,
