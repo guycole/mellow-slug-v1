@@ -1,0 +1,25 @@
+{
+    "equipment": {
+        "antenna": "multicoupler",
+        "receiver_id": 7,
+        "receiver_type": "rtl-sdr-v3",
+        "platform": "rpi4",
+        "hostName": "pi4j"
+    },
+    "geoLoc": {
+        "altitude": 0,
+        "latitude": 38.108,
+        "longitude": -122.268,
+        "siteName": "vallejo01"
+    },
+    "timeStamp": {
+        "epochSeconds": 1782641797,
+        "iso8601": "2026-06-28T10:16:37+00:00"
+    },
+    "crate": "wombat04",
+    "fileName": "a057d62e-3e64-4149-ace3-1d0a8e6da94a.json",
+    "mode": "default",
+    "project": "slug-v1",
+    "version": 1,
+    "observations": []
+}
