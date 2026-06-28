@@ -43,8 +43,8 @@ class BootBoy:
 
         yaml_config = {
             "crateName": crate_name,
-            "host": {
-                "name": host_name,
+            "equipment": {
+                "hostName": host_name,
                 "type": host_type,
             },
             "receiver": {
@@ -54,7 +54,7 @@ class BootBoy:
                 "task": receiver.get("task", "xxx"),
                 "type": receiver.get("type", "xxx"),
             },
-            "freshDir": "/var/wombat/fresh/hyena",
+            "freshDir": "/var/wombat/fresh/slug",
             "geoLoc": geo_loc,
         }
 
