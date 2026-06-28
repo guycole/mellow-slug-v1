@@ -1,9 +1,9 @@
 #
-# docker build -t heeler:latest .
-# docker run -v /var/wombat:/mnt/wombat --name heeler heeler:latest
-# docker run -e stuntbox=validate -v /var/wombat:/mnt/wombat --name heeler heeler:latest
-# docker run -e stuntbox=score -e limit=5 --name heeler heeler:latest
-# docker run -e stuntbox=score --name heeler heeler:latest
+# docker build -t slug:latest .
+# docker run -v /var/wombat:/mnt/wombat --name slug slug:latest
+# docker run -e stuntbox=validate -v /var/wombat:/mnt/wombat --name slug slug:latest
+# docker run -e stuntbox=score -e limit=5 --name slug slug:latest
+# docker run -e stuntbox=score --name slug slug:latest
 #
 FROM python:3.11-slim
 
@@ -38,10 +38,8 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY requirements.txt ./
 RUN $VIRTUAL_ENV/bin/pip install --no-cache-dir -r requirements.txt
 
-COPY koala.py ./
-COPY heeler_app.py ./
+COPY slug_app.py ./
 COPY postgres.py ./
-COPY scorer.py ./
 COPY sql_table.py ./
 COPY validator.py ./
 
@@ -50,4 +48,4 @@ RUN printf '%s\n' '#!/bin/sh' 'set -e' '/usr/local/bin/collect-wombat-ids.sh' 's
 
 RUN mkdir -p /mnt/wombat
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["python", "heeler_app.py"]
+CMD ["python", "slug_app.py"]

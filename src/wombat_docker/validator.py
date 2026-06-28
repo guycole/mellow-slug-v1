@@ -1,6 +1,6 @@
 #
 # Title: validator.py
-# Description: ensure valid heeler files
+# Description: ensure valid slug files
 # Development Environment: Ubuntu 22.04.5 LTS/python 3.10.12
 # Author: G.S. Cole (guycole at gmail dot com)
 #
@@ -12,7 +12,7 @@ import os
 from postgres import PostGres
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-logger = logging.getLogger("heeler")
+logger = logging.getLogger("slug")
 
 class Validator:
 
@@ -21,8 +21,8 @@ class Validator:
 
         # path from inside docker container
         self.failure_dir = "/mnt/wombat/failure/"
-        self.fresh_dir = "/mnt/wombat/fresh/heeler"
-        self.success_dir = "/mnt/wombat/heeler/success/"
+        self.fresh_dir = "/mnt/wombat/fresh/slug"
+        self.success_dir = "/mnt/wombat/slug/success/"
 
         # path for mac development
         # self.failure_dir = "/var/wombat/failure/"
@@ -38,12 +38,11 @@ class Validator:
         self.failure += 1
         os.rename(file_name, self.failure_dir + file_name)
 
-    def file_success(self, file_name1: str, file_name2: str):
-        #logger.info(f"file success:{file_name1}, {file_name2}")
+    def file_success(self, file_name: str):
+        #logger.info(f"file success:{file_name1}")
 
         self.success += 1
-        os.rename(file_name1, self.success_dir + "/" + file_name1)
-        os.rename(file_name2, self.success_dir + "/" + file_name2)
+        os.rename(file_name, self.success_dir + "/" + file_name)
 
     def file_reader(self, file_name: str) -> bool:
         try:
@@ -66,11 +65,11 @@ class Validator:
                     "epoch_seconds": self.raw_buffer["timeStamp"]["epochSeconds"],
                     "file_name": test_file_name,
                     "file_time": self.raw_buffer["timeStamp"]["iso8601"],
+                    "file_type": self.raw_buffer["project"],
                     "load_time": datetime.datetime.now(),
-                    "mode": self.raw_buffer["mode"],
                     "obs_quantity": len(self.raw_buffer["observations"]),
                     "platform": self.raw_buffer["equipment"]["platform"],
-                    "project": self.raw_buffer["project"],
+                    "site": self.raw_buffer["preamble"]["geoLoc"]["siteName"],
                 }
 
                 self.postgres.load_log_insert(load_log)
@@ -81,39 +80,28 @@ class Validator:
         
         return False
 
-    def file_processor(self, file_name1: str, file_name2: str) -> None:
-        if os.path.isfile(file_name1) is False:
-            logger.warning(f"skipping non-file:{file_name1}")
-            self.file_failure(file_name1)
-            self.file_failure(file_name2)
+    def file_processor(self, file_name: str) -> None:
+        if os.path.isfile(file_name) is False:
+            logger.warning(f"skipping non-file:{file_name}")
+            self.file_failure(file_name)
             return
 
-        if os.path.isfile(file_name2) is False:
-            logger.warning(f"skipping non-file:{file_name2}")
-            self.file_failure(file_name1)
-            self.file_failure(file_name2)
+        if not self.file_reader(file_name):
+            logger.warning(f"file read failed for {file_name}")
+            self.file_failure(file_name)
             return
         
-        test_file_name = file_name1 if file_name1.endswith(".json") else file_name2
-        if not self.file_reader(test_file_name):
-            logger.warning(f"file read failed for {test_file_name}")
-            self.file_failure(file_name1)
-            self.file_failure(file_name2)
-            return
-        
-        if self.raw_buffer["version"] == 1 and self.raw_buffer["project"] == "heeler-v2":
+        if self.raw_buffer["version"] == 1 and self.raw_buffer["project"] == "slug-v1":
             pass
         else:
-            logger.warning(f"invalid version or project for {test_file_name}")
-            self.file_failure(file_name1)
-            self.file_failure(file_name2)
+            logger.warning(f"invalid version or project for {file_name}")
+            self.file_failure(file_name)
             return
         
-        if self.load_log_test(test_file_name):
-            self.file_success(file_name1, file_name2)
+        if self.load_log_test(file_name):
+            self.file_success(file_name)
         else:
-            self.file_failure(file_name1)
-            self.file_failure(file_name2)
+            self.file_failure(file_name)
 
     def execute(self) -> None:
         logger.info("validator")
@@ -123,20 +111,8 @@ class Validator:
         targets = sorted(os.listdir("."))
         logger.info(f"{len(targets)} files noted")
 
-        ndx1 = 0
-        while ndx1 < len(targets)-1:
-            # valid files will arrive in pairs
-            target1 = targets[ndx1]
-            target2 = targets[ndx1+1]
-
-            temp = target1.split(".")
-            if target2.startswith(temp[0]):
-                self.file_processor(target1, target2)
-                ndx1 += 1
-            else:
-                self.file_failure(target1)
-
-            ndx1 += 1
+        for target in targets:
+            self.file_processor(target)
 
         logger.info(f"validator success:{self.success} failure:{self.failure}")
 
