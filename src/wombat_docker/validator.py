@@ -64,12 +64,11 @@ class Validator:
                 load_log = {
                     "epoch_seconds": self.raw_buffer["timeStamp"]["epochSeconds"],
                     "file_name": test_file_name,
-                    "file_time": self.raw_buffer["timeStamp"]["iso8601"],
-                    "file_type": self.raw_buffer["project"],
                     "host_name": self.raw_buffer["equipment"]["hostName"],
                     "load_time": datetime.datetime.now(),
                     "obs_quantity": len(self.raw_buffer["observations"]),
-                    "site": self.raw_buffer["geoLoc"]["siteName"],
+                    "obs_time": self.raw_buffer["timeStamp"]["iso8601"],
+                    "project": self.raw_buffer["project"],
                 }
 
                 self.postgres.load_log_insert(load_log)
