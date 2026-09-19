@@ -25,10 +25,11 @@ echo "building slug:latest with WOMBAT_UID=${WOMBAT_UID} WOMBAT_GID=${WOMBAT_GID
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 #
 docker build \
+    -f "${SCRIPT_DIR}/src/wombat_docker/Dockerfile" \
     --build-arg WOMBAT_UID="${WOMBAT_UID}" \
     --build-arg WOMBAT_GID="${WOMBAT_GID}" \
     -t slug:latest \
-    "${SCRIPT_DIR}/src/wombat_docker"
+    "${SCRIPT_DIR}/src"
 #
 echo "done"
 #

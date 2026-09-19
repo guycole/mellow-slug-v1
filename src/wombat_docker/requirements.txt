@@ -1,5 +1,6 @@
 black==26.5.1
 click==8.4.2
+jsonschema==4.25.1
 mypy_extensions==1.1.0
 packaging==26.2
 pathspec==1.1.1

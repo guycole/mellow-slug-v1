@@ -6,94 +6,79 @@
 #
 import logging
 import datetime
-import json
 import os
 
-from postgres import PostGres
-
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-logger = logging.getLogger("slug")
+from helper.json_helper import JsonHelper
+from helper.postgres import PostGres
 
 class Validator:
 
-    def __init__(self, postgres: PostGres):
+    def __init__(self, logger: logging.Logger, postgres: PostGres):
+        self.logger = logger
         self.postgres = postgres
+        self.json_helper = JsonHelper(logger)
 
-        # path from inside docker container
-        self.failure_dir = "/mnt/wombat/failure/"
-        self.fresh_dir = "/mnt/wombat/fresh/slug"
-        self.success_dir = "/mnt/wombat/slug/success/"
-
-        # path for mac development
-        # self.failure_dir = "/var/wombat/failure/"
-        # self.fresh_dir = "/var/wombat/fresh/heeler"
-        # self.success_dir = "/var/wombat/heeler/success/"
+        self.failure_dir = os.environ.get("FAILURE_DIR", "/var/wombat/failure")
+        self.fresh_dir = os.environ.get("FRESH_DIR", "/var/wombat/fresh/slug")
+        self.success_dir = os.environ.get("SUCCESS_DIR", "/var/wombat/slug/success")
 
         self.failure = 0
         self.success = 0
 
     def file_failure(self, file_name: str):
-        logger.info(f"file failure:{file_name}")
+        self.logger.info(f"file failure:{file_name}")
 
         self.failure += 1
-        os.rename(file_name, self.failure_dir + file_name)
+        failure_target = os.path.join(self.failure_dir, file_name)
+        try:
+            os.rename(file_name, failure_target)
+        except Exception as error:
+            self.logger.error(f"file move failure for {file_name} -> {failure_target}: {error}")
 
     def file_success(self, file_name: str):
         #logger.info(f"file success:{file_name1}")
 
         self.success += 1
-        os.rename(file_name, self.success_dir + "/" + file_name)
-
-    def file_reader(self, file_name: str) -> bool:
+        success_target = os.path.join(self.success_dir, file_name)
         try:
-            with open(file_name, "r", encoding="utf-8") as in_file:
-                self.raw_buffer = json.load(in_file)
+            os.rename(file_name, success_target)
         except Exception as error:
-            logger.error(f"file read failed for {file_name}: {error}")
-            return False
-
-        return True
+            self.logger.error(f"file move failure for {file_name} -> {success_target}: {error}")
 
     def load_log_test(self, test_file_name: str) -> bool:
         try:
+            raw_buffer = self.json_helper.raw_json
+
+            self.logger.info(f"checking load log:{test_file_name}")
+
             candidate = self.postgres.load_log_select_by_file_name(test_file_name)
             if candidate is not None:
-                logger.info(f"skippping already processed:{test_file_name}")
+                self.logger.info(f"skippping already processed:{test_file_name}")
                 return False
             else:
                 load_log = {
-                    "epoch_seconds": self.raw_buffer["timeStamp"]["epochSeconds"],
+                    "epoch_seconds": raw_buffer["timeStamp"]["epochSeconds"],
                     "file_name": test_file_name,
-                    "host_name": self.raw_buffer["equipment"]["hostName"],
+                    "host_name": raw_buffer["equipment"]["hostName"],
                     "load_time": datetime.datetime.now(),
-                    "obs_quantity": len(self.raw_buffer["observations"]),
-                    "obs_time": self.raw_buffer["timeStamp"]["iso8601"],
-                    "project": self.raw_buffer["project"],
+                    "obs_quantity": len(raw_buffer["observations"]),
+                    "obs_time": raw_buffer["timeStamp"]["iso8601"],
+                    "project": raw_buffer["job"]["project"],
                 }
 
                 self.postgres.load_log_insert(load_log)
+                self.logger.info(f"load log insert complete:{test_file_name}")
 
                 return True
         except Exception as error:
-            logger.error(f"postgres insert failed for {test_file_name}: {error}")        
+            self.logger.error(f"postgres insert failed for {test_file_name}: {error}")        
         
         return False
 
     def file_processor(self, file_name: str) -> None:
-        if os.path.isfile(file_name) is False:
-            logger.warning(f"skipping non-file:{file_name}")
-            self.file_failure(file_name)
-            return
-
-        if not self.file_reader(file_name):
-            logger.warning(f"file read failed for {file_name}")
-            self.file_failure(file_name)
-            return
+        self.logger.info(f"processing file:{file_name}")
         
-        if self.raw_buffer["version"] == 1 and self.raw_buffer["project"] == "slug-v1":
-            pass
-        else:
-            logger.warning(f"invalid version or project for {file_name}")
+        if not self.json_helper.json_file_tester(file_name):
             self.file_failure(file_name)
             return
         
@@ -103,17 +88,17 @@ class Validator:
             self.file_failure(file_name)
 
     def execute(self) -> None:
-        logger.info("validator")
-        logger.info(f"fresh dir:{self.fresh_dir}")
+        self.logger.info("validator")
+        self.logger.info(f"fresh dir:{self.fresh_dir}")
 
         os.chdir(self.fresh_dir)
         targets = sorted(os.listdir("."))
-        logger.info(f"{len(targets)} files noted")
+        self.logger.info(f"{len(targets)} files noted")
 
         for target in targets:
             self.file_processor(target)
 
-        logger.info(f"validator success:{self.success} failure:{self.failure}")
+        self.logger.info(f"validator success:{self.success} failure:{self.failure}")
 
 # ;;; Local Variables: ***
 # ;;; mode:python ***
