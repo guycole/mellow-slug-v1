@@ -20,9 +20,11 @@ from yaml.loader import SafeLoader
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("slug")
 
+
 class Equipment(pydantic.BaseModel):
     hostName: str
     hostType: str
+
 
 class GeoLoc(pydantic.BaseModel):
     altitude: float
@@ -30,10 +32,12 @@ class GeoLoc(pydantic.BaseModel):
     longitude: float
     siteName: str
 
+
 class Job(pydantic.BaseModel):
     mode: str
     project: str
     task: str
+
 
 class Observation(pydantic.BaseModel):
     bssid: str
@@ -43,11 +47,13 @@ class Observation(pydantic.BaseModel):
     signalDbm: int
     ssid: str
 
+
 class Receiver(pydantic.BaseModel):
     antenna: str
     receiverId: int
     task: str
     type: str
+
 
 class TimeStamp(pydantic.BaseModel):
     epochSeconds: int = pydantic.Field(default_factory=lambda: int(time.time()))
@@ -60,6 +66,7 @@ class TimeStamp(pydantic.BaseModel):
         ).isoformat()
         return self
 
+
 class SlugModel(pydantic.BaseModel):
     crateName: str
     fileName: str
@@ -70,6 +77,7 @@ class SlugModel(pydantic.BaseModel):
     receiver: Receiver
     timeStamp: TimeStamp
     observations: list[Observation]
+
 
 class Collector:
 
@@ -88,7 +96,6 @@ class Collector:
         project = task
         self.job = Job(mode=mode, project=project, task=task)
 
-
     def execute(self) -> None:
         print(f"collector execute: {self.receiver.task}")
 
@@ -100,8 +107,8 @@ class Collector:
         observations = []
 
         slug_model = SlugModel(
-            crateName = self.crate_name,
-            fileName = f"{base_file_name}.json",
+            crateName=self.crate_name,
+            fileName=f"{base_file_name}.json",
             equipment=self.equipment,
             geoLoc=self.geo_loc,
             job=self.job,
@@ -112,6 +119,7 @@ class Collector:
 
         with open(outfile_json, "w", encoding="utf-8") as out_file:
             out_file.write(slug_model.model_dump_json(indent=4))
+
 
 #
 # argv[1] = configuration filename

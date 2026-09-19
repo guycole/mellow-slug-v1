@@ -11,7 +11,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from validator import Validator
-from postgres import PostGres
+from helper.postgres import PostGres
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("slug")
@@ -21,20 +21,37 @@ class SlugApp:
     def __init__(self, stunt_box: str):
         self.stunt_box = stunt_box
 
-        # wombat docker
-        self.db_conn = "postgresql+psycopg2://slug_client:batabat@172.17.0.1:5432/slug"
+        db_user = os.environ.get("PGUSER", "slug_client")
+        db_password = os.environ.get("PGPASSWORD", "batabat")
+        db_host = os.environ.get("PGHOST", "localhost")
+        db_port = os.environ.get("PGPORT", "5432")
+        db_name = os.environ.get("PGDATABASE", "slug")
 
-        # mac development
-        # self.db_conn = "postgresql+psycopg2://slug_client:batabat@localhost:5432/slug"
+        self.db_conn = os.environ.get(
+            "SLUG_DB_CONN",
+            f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}",
+        )
+        logger.info(f"db target:{db_user}@{db_host}:{db_port}/{db_name}")
 
-        db_engine = create_engine(self.db_conn, echo=False)
+        connect_timeout = int(os.environ.get("PG_CONNECT_TIMEOUT", "5"))
+        statement_timeout_ms = int(os.environ.get("PG_STATEMENT_TIMEOUT_MS", "5000"))
+
+        db_engine = create_engine(
+            self.db_conn,
+            echo=False,
+            pool_pre_ping=True,
+            connect_args={
+                "connect_timeout": connect_timeout,
+                "options": f"-c statement_timeout={statement_timeout_ms}",
+            },
+        )
         self.postgres = PostGres(sessionmaker(bind=db_engine, expire_on_commit=False))
 
     def execute(self) -> None:
         logger.info(f"slug execute:{self.stunt_box}")
 
         if self.stunt_box == "validator":
-            validator = Validator(self.postgres)
+            validator = Validator(logger, self.postgres)
             validator.execute()
         else:
             logger.error(f"invalid stunt_box option:{self.stunt_box}")

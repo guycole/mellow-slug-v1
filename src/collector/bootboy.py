@@ -11,6 +11,7 @@ import sys
 import yaml
 from yaml.loader import SafeLoader
 
+
 class BootBoy:
 
     def configuration(self, target: str) -> dict[str, any]:
