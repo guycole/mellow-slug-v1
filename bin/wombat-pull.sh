@@ -9,8 +9,8 @@ PATH=/bin:/usr/bin:/etc:/usr/local/bin; export PATH
 #
 REGISTRY="ghcr.io"
 OWNER="guycole"
-IMAGE="wombat-slug"
-TAG="latest"
+IMAGE="${IMAGE:-mellow-slug}"
+TAG="${TAG:-latest}"
 #
 echo "pulling ${REGISTRY}/${OWNER}/${IMAGE}:${TAG}"
 docker pull "${REGISTRY}/${OWNER}/${IMAGE}:${TAG}"
