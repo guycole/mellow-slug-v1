@@ -1,6 +1,6 @@
 # Linux hosts only.
 #
-# docker build -f src/wombat_docker/Dockerfile -t slug:latest src
+# docker build -f src/wombat_docker/Dockerfile -t slug:latest src/
 # docker run -v /var/wombat:/mnt/wombat --name slug slug:latest
 # docker run -e stuntbox=validate -v /var/wombat:/mnt/wombat --name slug slug:latest
 #
