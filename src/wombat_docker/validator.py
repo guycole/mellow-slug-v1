@@ -8,10 +8,39 @@ import logging
 import datetime
 import os
 
+from abc import ABC, abstractmethod
+
 from helper.json_helper import JsonHelper
 from helper.postgres import PostGres
 
-class Validator:
+
+class Validator(ABC):
+
+    @abstractmethod
+    def file_processor(self, file_name: str) -> int:
+        pass
+
+    @abstractmethod
+    def execute(self) -> int:
+        pass
+
+    @abstractmethod
+    def file_failure(self, file_name: str) -> None:
+        pass
+
+    @abstractmethod
+    def file_success(self, file_name: str) -> None:
+        pass
+
+    @abstractmethod
+    def load_log_test(self, test_file_name: str) -> bool:
+        pass
+
+    @abstractmethod
+    def file_processor(self, file_name: str) -> bool:
+        pass
+
+class SlugValidator:
 
     def __init__(self, logger: logging.Logger, postgres: PostGres):
         self.logger = logger
@@ -25,7 +54,7 @@ class Validator:
         self.failure = 0
         self.success = 0
 
-    def file_failure(self, file_name: str):
+    def file_failure(self, file_name: str) -> None:
         self.logger.info(f"file failure:{file_name}")
 
         self.failure += 1
@@ -35,7 +64,7 @@ class Validator:
         except Exception as error:
             self.logger.error(f"file move failure for {file_name} -> {failure_target}: {error}")
 
-    def file_success(self, file_name: str):
+    def file_success(self, file_name: str) -> None:
         #logger.info(f"file success:{file_name1}")
 
         self.success += 1
@@ -75,21 +104,22 @@ class Validator:
         
         return False
 
-    def file_processor(self, file_name: str) -> None:
+    def file_processor(self, file_name: str) -> bool:
         self.logger.info(f"processing file:{file_name}")
-        
+
         if not self.json_helper.json_file_tester(file_name):
             self.file_failure(file_name)
-            return
-        
+            return False
+
         if self.load_log_test(file_name):
             self.file_success(file_name)
+            return True
         else:
             self.file_failure(file_name)
+            return False
 
-    def execute(self) -> None:
-        self.logger.info("validator")
-        self.logger.info(f"fresh dir:{self.fresh_dir}")
+    def execute(self) -> int:
+        self.logger.info(f"validator fresh dir:{self.fresh_dir}")
 
         os.chdir(self.fresh_dir)
         targets = sorted(os.listdir("."))
@@ -99,6 +129,8 @@ class Validator:
             self.file_processor(target)
 
         self.logger.info(f"validator success:{self.success} failure:{self.failure}")
+
+        return 0
 
 # ;;; Local Variables: ***
 # ;;; mode:python ***

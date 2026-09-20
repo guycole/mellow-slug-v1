@@ -10,7 +10,7 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from validator import Validator
+from validator import SlugValidator
 from helper.postgres import PostGres
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -37,21 +37,23 @@ class SlugApp:
         )
         self.postgres = PostGres(sessionmaker(bind=db_engine, expire_on_commit=False))
 
-    def execute(self) -> None:
+    def execute(self) -> int:
         logger.info(f"slug execute:{self.stunt_box}")
 
         if self.stunt_box == "validator":
-            validator = Validator(logger, self.postgres)
-            validator.execute()
+            validator = SlugValidator(logger, self.postgres)
+            return(validator.execute())
         else:
             logger.error(f"invalid stunt_box option:{self.stunt_box}")
-            return
+            return 1
+
+        return 0
 
 if __name__ == "__main__":
     stunt_box = os.environ.get("stuntbox", "validator")
 
     app = SlugApp(stunt_box)
-    app.execute()
+    exit(app.execute())
 
 # ;;; Local Variables: ***
 # ;;; mode:python ***

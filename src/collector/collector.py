@@ -17,6 +17,8 @@ import zoneinfo
 import yaml
 from yaml.loader import SafeLoader
 
+from abc import ABC, abstractmethod
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("slug")
 
@@ -40,12 +42,7 @@ class Job(pydantic.BaseModel):
 
 
 class Observation(pydantic.BaseModel):
-    bssid: str
-    capabilities: str
-    cipherType: str
-    frequencyMhz: int
-    signalDbm: int
-    ssid: str
+    name: str
 
 
 class Receiver(pydantic.BaseModel):
@@ -70,7 +67,7 @@ class TimeStamp(pydantic.BaseModel):
 class SlugModel(pydantic.BaseModel):
     crateName: str
     fileName: str
-    version: int = 2
+    version: int = 1
     equipment: Equipment
     geoLoc: GeoLoc
     job: Job
@@ -79,8 +76,17 @@ class SlugModel(pydantic.BaseModel):
     observations: list[Observation]
 
 
-class Collector:
+class Collector(ABC):
+    @abstractmethod
+    def get_observations(self) -> list[Observation]:
+        pass
 
+    @abstractmethod
+    def execute(self) -> int:
+        pass
+
+
+class SlugCollector(Collector):
     def __init__(self, args: dict[str, any]):
         self.crate_name = args["crateName"]
         self.fresh_dir = args["freshDir"]
@@ -90,13 +96,15 @@ class Collector:
         self.receiver = Receiver(**args["receiver"])
         self.time_stamp = TimeStamp()
 
-        # heeler-v2-iwlist
         task = args["receiver"]["task"]
         mode = "default"
         project = task
         self.job = Job(mode=mode, project=project, task=task)
 
-    def execute(self) -> None:
+    def get_observations(self) -> list[Observation]:
+        return []
+
+    def execute(self) -> int:
         print(f"collector execute: {self.receiver.task}")
 
         base_file_name = str(uuid.uuid4())
@@ -104,7 +112,7 @@ class Collector:
 
         outfile_json = f"{self.fresh_dir}/{base_file_name}.json"
 
-        observations = []
+        observations = self.get_observations()
 
         slug_model = SlugModel(
             crateName=self.crate_name,
@@ -120,6 +128,8 @@ class Collector:
         with open(outfile_json, "w", encoding="utf-8") as out_file:
             out_file.write(slug_model.model_dump_json(indent=4))
 
+        return 0
+
 
 #
 # argv[1] = configuration filename
@@ -133,10 +143,12 @@ if __name__ == "__main__":
     with open(file_name, "r") as in_file:
         try:
             configuration = yaml.load(in_file, Loader=SafeLoader)
-            collector = Collector(configuration)
-            collector.execute()
+            collector = SlugCollector(configuration)
+            exit(collector.execute())
         except yaml.YAMLError as error:
             print(error)
+
+    exit(1)
 
 # ;;; Local Variables: ***
 # ;;; mode:python ***
