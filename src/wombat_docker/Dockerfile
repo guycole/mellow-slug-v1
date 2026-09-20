@@ -17,6 +17,8 @@ ENV FAILURE_DIR=/mnt/wombat/failure
 ENV FRESH_DIR=/mnt/wombat/fresh/slug
 ENV SUCCESS_DIR=/mnt/wombat/slug/success
 
+ENV DB_CONN=postgresql+psycopg2://slug_client:batabat@172.17.0.1:5432/slug
+
 # Copy requirements and install them inside the venv
 COPY wombat_docker/requirements.txt ./
 RUN $VIRTUAL_ENV/bin/pip install --no-cache-dir -r requirements.txt
@@ -26,5 +28,4 @@ COPY wombat_docker/validator.py ./
 COPY helper ./helper
 
 RUN mkdir -p /mnt/wombat
-ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["python", "slug_app.py"]
