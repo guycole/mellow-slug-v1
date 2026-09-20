@@ -21,17 +21,7 @@ class SlugApp:
     def __init__(self, stunt_box: str):
         self.stunt_box = stunt_box
 
-        db_user = os.environ.get("PGUSER", "slug_client")
-        db_password = os.environ.get("PGPASSWORD", "batabat")
-        db_host = os.environ.get("PGHOST", "localhost")
-        db_port = os.environ.get("PGPORT", "5432")
-        db_name = os.environ.get("PGDATABASE", "slug")
-
-        self.db_conn = os.environ.get(
-            "SLUG_DB_CONN",
-            f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}",
-        )
-        logger.info(f"db target:{db_user}@{db_host}:{db_port}/{db_name}")
+        self.db_conn = os.environ.get("DB_CONN", "postgresql+psycopg2://slug_client:batabat@localhost:5432/slug")
 
         connect_timeout = int(os.environ.get("PG_CONNECT_TIMEOUT", "5"))
         statement_timeout_ms = int(os.environ.get("PG_STATEMENT_TIMEOUT_MS", "5000"))
