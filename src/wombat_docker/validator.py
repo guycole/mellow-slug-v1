@@ -40,7 +40,7 @@ class Validator(ABC):
     def file_processor(self, file_name: str) -> bool:
         pass
 
-class SlugValidator:
+class SlugValidator(Validator):
 
     def __init__(self, logger: logging.Logger, postgres: PostGres):
         self.logger = logger
@@ -65,7 +65,7 @@ class SlugValidator:
             self.logger.error(f"file move failure for {file_name} -> {failure_target}: {error}")
 
     def file_success(self, file_name: str) -> None:
-        #logger.info(f"file success:{file_name1}")
+        self.logger.info(f"file success:{file_name}")
 
         self.success += 1
         success_target = os.path.join(self.success_dir, file_name)
