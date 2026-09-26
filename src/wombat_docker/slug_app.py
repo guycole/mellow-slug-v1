@@ -35,7 +35,8 @@ class SlugApp:
                 "options": f"-c statement_timeout={statement_timeout_ms}",
             },
         )
-        self.postgres = PostGres(sessionmaker(bind=db_engine, expire_on_commit=False))
+        
+        self.postgres = PostGres(logger, sessionmaker(bind=db_engine, expire_on_commit=False))
 
     def execute(self) -> int:
         logger.info(f"slug execute:{self.stunt_box}")

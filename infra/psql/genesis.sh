@@ -29,19 +29,3 @@ createdb slug -O slug_admin -E UTF8 -T template0 -l C
 
 # psql -h localhost -p 5432 -U slug_admin -d slug
 # psql -h localhost -p 5432 -U slug_client -d slug
-
-# as slug_admin
-#create schema slug_v1;
-#grant usage on schema slug_v1 to slug_client;
-
-##
-## old stuff
-##
-#create user heeler_client with encrypted password 'batabat';
-#create database heeler owner heeler_admin tablespace heeler locale 'C.utf8' template template0;
-#create database heeler owner heeler_admin locale 'C.utf8' template template0;
-
-#create role heeler_py with login;
-#alter role heeler_py with password 'bogus';
-
-#psql -U heeler_py -d heeler_v1

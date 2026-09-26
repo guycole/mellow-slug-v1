@@ -153,7 +153,7 @@ class JsonHelper:
             return False
 
         if (
-            self.raw_json["version"] == 2
+            self.raw_json["version"] == 1
             and self.raw_json["job"]["project"] == "slug-v1"
         ):
             pass

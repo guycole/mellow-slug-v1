@@ -11,4 +11,6 @@ export PGPASSWORD=woofwoof
 export PGUSER=slug_admin
 #
 psql $PGDATABASE -c "drop table slug_load_log"
+psql $PGDATABASE -c "drop table slug_geo_loc"
+psql $PGDATABASE -c "drop table slug_daily_score"
 #

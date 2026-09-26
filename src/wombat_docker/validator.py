@@ -36,10 +36,6 @@ class Validator(ABC):
     def load_log_test(self, test_file_name: str) -> bool:
         pass
 
-    @abstractmethod
-    def file_processor(self, file_name: str) -> bool:
-        pass
-
 class SlugValidator(Validator):
 
     def __init__(self, logger: logging.Logger, postgres: PostGres):
@@ -85,22 +81,49 @@ class SlugValidator(Validator):
                 self.logger.info(f"skippping already processed:{test_file_name}")
                 return False
             else:
+                crate_name = raw_buffer["crateName"]
+                host_name = raw_buffer["equipment"]["hostName"]
+                site_name = raw_buffer["geoLoc"]["siteName"]
+                task_name = raw_buffer["receiver"]["task"]
+                obs_quantity = len(raw_buffer["observations"])
+                obs_time = raw_buffer["timeStamp"]["iso8601"]
+
+                geo_loc_matches = self.postgres.geo_loc_select_by_site(site_name)
+                if len(geo_loc_matches) < 1:
+                    self.logger.error(f"missing geo location for site:{site_name}")
+                    return False
+
+                geo_loc_id = geo_loc_matches[0].id
+
                 load_log = {
+                    "crate_name": crate_name,
                     "epoch_seconds": raw_buffer["timeStamp"]["epochSeconds"],
                     "file_name": test_file_name,
-                    "host_name": raw_buffer["equipment"]["hostName"],
+                    "geo_loc_id": geo_loc_id,
+                    "host_name": host_name,
                     "load_time": datetime.datetime.now(),
-                    "obs_quantity": len(raw_buffer["observations"]),
-                    "obs_time": raw_buffer["timeStamp"]["iso8601"],
-                    "project": raw_buffer["job"]["project"],
+                    "obs_quantity": obs_quantity,
+                    "obs_time": obs_time,
+                    "site_name": site_name,
+                    "task": task_name,
                 }
 
                 self.postgres.load_log_insert(load_log)
+
+                daily_score = {
+                    "crate_name": crate_name,
+                    "file_quantity": 1,
+                    "host_name": host_name,
+                    "obs_quantity": obs_quantity,
+                    "score_date": datetime.datetime.fromisoformat(obs_time).date(),
+                }
+                self.postgres.daily_score_insert_or_update(daily_score)
+
                 self.logger.info(f"load log insert complete:{test_file_name}")
 
                 return True
         except Exception as error:
-            self.logger.error(f"postgres insert failed for {test_file_name}: {error}")        
+            self.logger.error(f"postgres insert failed for {test_file_name}: {error}")
         
         return False
 

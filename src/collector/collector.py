@@ -14,6 +14,8 @@ import time
 import uuid
 import zoneinfo
 
+from typing import Any
+
 import yaml
 from yaml.loader import SafeLoader
 
@@ -24,15 +26,19 @@ logger = logging.getLogger("slug")
 
 
 class Equipment(pydantic.BaseModel):
-    hostName: str
-    hostType: str
+    model_config = pydantic.ConfigDict(populate_by_name=True)
+
+    host_name: str = pydantic.Field(alias="hostName")
+    host_type: str = pydantic.Field(alias="hostType")
 
 
 class GeoLoc(pydantic.BaseModel):
+    model_config = pydantic.ConfigDict(populate_by_name=True)
+
     altitude: float
     latitude: float
     longitude: float
-    siteName: str
+    site_name: str = pydantic.Field(alias="siteName")
 
 
 class Job(pydantic.BaseModel):
@@ -46,33 +52,39 @@ class Observation(pydantic.BaseModel):
 
 
 class Receiver(pydantic.BaseModel):
+    model_config = pydantic.ConfigDict(populate_by_name=True)
+
     antenna: str
-    receiverId: int
+    receiver_id: int = pydantic.Field(alias="receiverId")
     task: str
     type: str
 
 
 class TimeStamp(pydantic.BaseModel):
-    epochSeconds: int = pydantic.Field(default_factory=lambda: int(time.time()))
+    model_config = pydantic.ConfigDict(populate_by_name=True)
+
+    epoch_seconds: int = pydantic.Field(default_factory=lambda: int(time.time()), alias="epochSeconds")
     iso8601: str = ""
 
     @pydantic.model_validator(mode="after")
     def sync_iso8601_from_epoch(self) -> "TimeStamp":
         self.iso8601 = datetime.datetime.fromtimestamp(
-            self.epochSeconds, tz=zoneinfo.ZoneInfo("UTC")
+            self.epoch_seconds, tz=zoneinfo.ZoneInfo("UTC")
         ).isoformat()
         return self
 
 
 class SlugModel(pydantic.BaseModel):
-    crateName: str
-    fileName: str
+    model_config = pydantic.ConfigDict(populate_by_name=True)
+
+    crate_name: str = pydantic.Field(alias="crateName")
+    file_name: str = pydantic.Field(alias="fileName")
     version: int = 1
     equipment: Equipment
-    geoLoc: GeoLoc
+    geo_loc: GeoLoc = pydantic.Field(alias="geoLoc")
     job: Job
     receiver: Receiver
-    timeStamp: TimeStamp
+    time_stamp: TimeStamp = pydantic.Field(alias="timeStamp")
     observations: list[Observation]
 
 
@@ -87,7 +99,7 @@ class Collector(ABC):
 
 
 class SlugCollector(Collector):
-    def __init__(self, args: dict[str, any]):
+    def __init__(self, args: dict[str, Any]):
         self.crate_name = args["crateName"]
         self.fresh_dir = args["freshDir"]
 
@@ -105,28 +117,26 @@ class SlugCollector(Collector):
         return []
 
     def execute(self) -> int:
-        print(f"collector execute: {self.receiver.task}")
+        logger.info("collector execute: %s", self.receiver.task)
 
         base_file_name = str(uuid.uuid4())
-        print(f"base filename: {base_file_name}")
+        logger.info("base filename: %s", base_file_name)
 
         outfile_json = f"{self.fresh_dir}/{base_file_name}.json"
 
-        observations = self.get_observations()
-
         slug_model = SlugModel(
-            crateName=self.crate_name,
-            fileName=f"{base_file_name}.json",
+            crate_name=self.crate_name,
+            file_name=f"{base_file_name}.json",
             equipment=self.equipment,
-            geoLoc=self.geo_loc,
+            geo_loc=self.geo_loc,
             job=self.job,
             receiver=self.receiver,
-            timeStamp=self.time_stamp,
-            observations=observations,
+            time_stamp=self.time_stamp,
+            observations=self.get_observations(),
         )
 
         with open(outfile_json, "w", encoding="utf-8") as out_file:
-            out_file.write(slug_model.model_dump_json(indent=4))
+            out_file.write(slug_model.model_dump_json(indent=4, by_alias=True))
 
         return 0
 
@@ -146,7 +156,7 @@ if __name__ == "__main__":
             collector = SlugCollector(configuration)
             exit(collector.execute())
         except yaml.YAMLError as error:
-            print(error)
+            logger.error("YAML parse error: %s", error)
 
     exit(1)
 
