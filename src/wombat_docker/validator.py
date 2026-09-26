@@ -17,7 +17,7 @@ from helper.postgres import PostGres
 class Validator(ABC):
 
     @abstractmethod
-    def file_processor(self, file_name: str) -> int:
+    def file_processor(self, file_name: str) -> bool:
         pass
 
     @abstractmethod

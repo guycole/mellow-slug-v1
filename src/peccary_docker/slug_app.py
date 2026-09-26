@@ -1,20 +1,23 @@
 #
 # Title: slug_app.py
-# Description: driver for slug application
+# Description: driver for peccary slug application
 # Development Environment: Ubuntu 22.04.5 LTS/python 3.10.12
 # Author: G.S. Cole (guycole at gmail dot com)
 #
 import logging
 import os
+import sys
+
+from helper.postgres import PostGres
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from validator import SlugValidator
-from helper.postgres import PostGres
+from loader import SlugLoader
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("slug")
+
 
 class SlugApp:
 
@@ -41,9 +44,9 @@ class SlugApp:
     def execute(self) -> int:
         logger.info(f"slug execute:{self.stunt_box}")
 
-        if self.stunt_box == "validator":
-            validator = SlugValidator(logger, self.postgres)
-            return(validator.execute())
+        if self.stunt_box == "loader":
+            loader = SlugLoader(logger, self.postgres)
+            return(loader.execute())
         else:
             logger.error(f"invalid stunt_box option:{self.stunt_box}")
             return 1
@@ -51,7 +54,7 @@ class SlugApp:
         return 0
 
 if __name__ == "__main__":
-    stunt_box = os.environ.get("stuntbox", "validator")
+    stunt_box = os.environ.get("stuntbox", "loader")
     app = SlugApp(stunt_box)
     exit(app.execute())
 
