@@ -6,7 +6,6 @@
 #
 import logging
 import datetime
-import json
 import os
 
 from abc import ABC, abstractmethod
@@ -35,6 +34,7 @@ class Loader(ABC):
     def load_log_test(self, test_file_name: str) -> bool:
         pass
 
+
 class SlugLoader(Loader):
 
     def __init__(self, logger: logging.Logger, postgres: PostGres):
@@ -47,19 +47,26 @@ class SlugLoader(Loader):
         self.failure = 0
         self.success = 0
 
-        self.jh = JsonHelper(logger)
+        self.json_helper = JsonHelper(logger)
 
-    def file_failure(self, file_name: str):
-        #        logger.info(f"file failure:{file_name}")
+    def file_failure(self, file_name: str) -> None:
+        self.logger.info(f"file failure:{file_name}")
 
         self.failure += 1
-        os.rename(file_name, self.failure_dir + "/" + file_name)
+        failure_target = os.path.join(self.failure_dir, file_name)
+        try:
+            os.rename(file_name, failure_target)
+        except Exception as error:
+            self.logger.error(f"file move failure for {file_name} -> {failure_target}: {error}")
 
-    def file_success(self, file_name: str):
-        #        logger.info(f"file success:{file_name}")
+    def file_success(self, file_name: str) -> None:
+        self.logger.info(f"file success:{file_name}")
 
         self.success += 1
-        os.remove(file_name)
+        try:
+            os.remove(file_name)
+        except Exception as error:
+            self.logger.error(f"file delete failure for {file_name}: {error}")
 
     def load_log_test(self, test_file_name: str) -> bool:
         self.logger.info(f"load_log_test for file: {test_file_name}")
@@ -69,49 +76,52 @@ class SlugLoader(Loader):
             if candidate is None:
                 self.logger.info(f"processing new file:{test_file_name}")
 
-                geo_loc = self.postgres.geo_loc_select_by_site(self.jh.raw_json["geoLoc"]["siteName"])
+                raw_buffer = self.json_helper.raw_json
+                site_name = raw_buffer["geoLoc"]["siteName"]
+                geo_loc = self.postgres.geo_loc_select_by_site(site_name)
                 if len(geo_loc) == 0:
-                    self.logger.warning("must insert geo_loc for site: %s", self.jh.raw_json["geoLoc"]["siteName"],)
+                    self.logger.warning("missing geo location for site: %s", site_name)
                     return False
 
                 load_log = {
-                    "crate_name": self.jh.raw_json["crateName"],
-                    "epoch_seconds": self.jh.raw_json["timeStamp"]["epochSeconds"],
+                    "crate_name": raw_buffer["crateName"],
+                    "epoch_seconds": raw_buffer["timeStamp"]["epochSeconds"],
                     "file_name": test_file_name,
                     "geo_loc_id": geo_loc[0].id,
-                    "host_name": self.jh.raw_json["equipment"]["hostName"],
+                    "host_name": raw_buffer["equipment"]["hostName"],
                     "load_time": datetime.datetime.now(),
-                    "mode": self.jh.raw_json["job"]["mode"],
-                    "obs_quantity": len(self.jh.raw_json["observations"]),
-                    "obs_time": self.jh.raw_json["timeStamp"]["iso8601"],
-                    "site_name": self.jh.raw_json["geoLoc"]["siteName"],
-                    "task": self.jh.raw_json["job"]["task"],
+                    "obs_quantity": len(raw_buffer["observations"]),
+                    "obs_time": raw_buffer["timeStamp"]["iso8601"],
+                    "site_name": site_name,
+                    "task": raw_buffer["job"]["task"],
                 }
 
                 self.postgres.load_log_insert(load_log)
 
                 daily_score = {
-                    "crate_name": self.jh.raw_json["crateName"],
+                    "crate_name": raw_buffer["crateName"],
                     "file_quantity": 1,
-                    "host_name": self.jh.raw_json["equipment"]["hostName"],
-                    "obs_quantity": len(self.jh.raw_json["observations"]),
-                    "score_date": datetime.datetime.fromisoformat(self.jh.raw_json["timeStamp"]["iso8601"]).date(),
+                    "host_name": raw_buffer["equipment"]["hostName"],
+                    "obs_quantity": len(raw_buffer["observations"]),
+                    "score_date": datetime.datetime.fromisoformat(raw_buffer["timeStamp"]["iso8601"]).date(),
                 }
 
                 self.postgres.daily_score_insert_or_update(daily_score)
 
+                self.logger.info(f"load log insert complete:{test_file_name}")
+
                 return True
             else:
-                self.logger.info(f"skippping already processed:{test_file_name}")
+                self.logger.info(f"skipping already processed:{test_file_name}")
         except Exception as error:
             self.logger.error(f"postgres insert failed for {test_file_name}: {error}")
         
         return False
 
-    def file_processor(self, file_name) -> bool:
+    def file_processor(self, file_name: str) -> bool:
         self.logger.info(f"processing file:{file_name}")
 
-        if not self.jh.json_file_tester(file_name):
+        if not self.json_helper.json_file_tester(file_name):
             self.file_failure(file_name)
             return False
 

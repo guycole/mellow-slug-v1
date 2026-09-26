@@ -53,9 +53,12 @@ File: ../helper/json_helper.py
 Files: ../helper/postgres.py and ../helper/sql_table.py
 
 - Implements data access methods used by the validator.
-- Table model: slug_load_log.
-- Load-log fields include:
-	epoch_seconds, file_name, host_name, load_time, obs_quantity, obs_time, project.
+- Uses slug_geo_loc as a lookup table for referential integrity.
+- Writes to slug_load_log with fields:
+	crate_name, epoch_seconds, file_name, geo_loc_id, host_name, load_time,
+	obs_quantity, obs_time, site_name, task.
+- Updates slug_daily_score (insert-or-update) with fields:
+	crate_name, file_quantity, host_name, obs_quantity, score_date.
 - Primary idempotency key in current implementation is file_name lookup.
 
 ## Runtime Configuration
@@ -151,5 +154,6 @@ Future validator projects can extend this template by:
 ## Notes and Known Gaps
 
 1. json_helper.py currently pins version/project business rules to version=1 and project=slug-v1.
+2. geo_loc rows are expected to exist before validator processing starts.
 
 Treat these as intentional constraints for this template unless your next application requires different policy.

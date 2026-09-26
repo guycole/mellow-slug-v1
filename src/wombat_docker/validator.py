@@ -36,6 +36,7 @@ class Validator(ABC):
     def load_log_test(self, test_file_name: str) -> bool:
         pass
 
+
 class SlugValidator(Validator):
 
     def __init__(self, logger: logging.Logger, postgres: PostGres):
@@ -78,7 +79,7 @@ class SlugValidator(Validator):
 
             candidate = self.postgres.load_log_select_by_file_name(test_file_name)
             if candidate is not None:
-                self.logger.info(f"skippping already processed:{test_file_name}")
+                self.logger.info(f"skipping already processed:{test_file_name}")
                 return False
             else:
                 crate_name = raw_buffer["crateName"]

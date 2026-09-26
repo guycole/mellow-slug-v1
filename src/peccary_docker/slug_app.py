@@ -6,7 +6,6 @@
 #
 import logging
 import os
-import sys
 
 from helper.postgres import PostGres
 
@@ -46,12 +45,10 @@ class SlugApp:
 
         if self.stunt_box == "loader":
             loader = SlugLoader(logger, self.postgres)
-            return(loader.execute())
+            return loader.execute()
         else:
             logger.error(f"invalid stunt_box option:{self.stunt_box}")
             return 1
-
-        return 0
 
 if __name__ == "__main__":
     stunt_box = os.environ.get("stuntbox", "loader")

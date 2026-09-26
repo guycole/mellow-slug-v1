@@ -8,6 +8,7 @@
 import json
 import logging
 import os
+from typing import Any
 
 from jsonschema import validate
 
@@ -115,7 +116,7 @@ class JsonHelper:
 
         return True
 
-    def json_file_writer(self, file_name: str, json_data: dict[str, any]) -> bool:
+    def json_file_writer(self, file_name: str, json_data: dict[str, Any]) -> bool:
         try:
             validate(instance=json_data, schema=schema)
         except Exception as error:

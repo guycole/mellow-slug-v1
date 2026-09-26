@@ -1,7 +1,7 @@
 #
 # docker build -f src/peccary_docker/Dockerfile -t slug:latest src/
-# docker run -v /var/wombat:/mnt/wombat --name slug slug:latest
-# docker run -e stuntbox=validate -v /var/wombat:/mnt/wombat --name slug slug:latest
+# docker run -v /var/peccary:/mnt/peccary --name slug slug:latest
+# docker run -e stuntbox=loader -v /var/peccary:/mnt/peccary --name slug slug:latest
 #
 FROM python:3.11-slim
 
@@ -14,7 +14,6 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 ENV FAILURE_DIR=/mnt/peccary/failure
 ENV FRESH_DIR=/mnt/peccary/slug/slug-v1
-ENV SUCCESS_DIR=/mnt/peccary/slug/success
 
 ENV DB_CONN=postgresql+psycopg2://slug_client:batabat@172.17.0.1:5432/slug
 
@@ -27,5 +26,4 @@ COPY peccary_docker/slug_app.py ./
 COPY peccary_docker/loader.py ./
 
 RUN mkdir -p /mnt/peccary
-ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["python", "slug_app.py"]

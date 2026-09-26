@@ -16,6 +16,7 @@ from helper.postgres import PostGres
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("slug")
 
+
 class SlugApp:
 
     def __init__(self, stunt_box: str):
@@ -43,12 +44,10 @@ class SlugApp:
 
         if self.stunt_box == "validator":
             validator = SlugValidator(logger, self.postgres)
-            return(validator.execute())
+            return validator.execute()
         else:
             logger.error(f"invalid stunt_box option:{self.stunt_box}")
             return 1
-
-        return 0
 
 if __name__ == "__main__":
     stunt_box = os.environ.get("stuntbox", "validator")

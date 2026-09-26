@@ -9,7 +9,7 @@ import datetime
 import logging
 import time
 
-from typing import List, Dict
+from typing import Any, List
 
 import sqlalchemy
 from sqlalchemy import and_
@@ -31,7 +31,7 @@ class PostGres:
         self.logger = logger
         self.Session = session
 
-    def daily_score_insert_or_update(self, args: dict[str, any]) -> DailyScore:
+    def daily_score_insert_or_update(self, args: dict[str, Any]) -> DailyScore:
         candidate = DailyScore(args)
 
         try:
@@ -69,7 +69,7 @@ class PostGres:
             return session.scalars(statement).all()
 
     @staticmethod
-    def _normalize_load_log_args(args: dict[str, any]) -> dict[str, any]:
+    def _normalize_load_log_args(args: dict[str, Any]) -> dict[str, Any]:
         key_map = {
             "crateName": "crate_name",
             "epochSeconds": "epoch_seconds",
@@ -89,7 +89,7 @@ class PostGres:
 
         return normalized
 
-    def load_log_insert(self, args: dict[str, any]) -> LoadLog:
+    def load_log_insert(self, args: dict[str, Any]) -> LoadLog:
         normalized_args = self._normalize_load_log_args(args)
         candidate = LoadLog(normalized_args)
 
